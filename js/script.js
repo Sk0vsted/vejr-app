@@ -1,86 +1,41 @@
 document.getElementById("getWeather").addEventListener("click", fetchWeather);
+document.getElementById("cityInput").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    fetchWeather();
+  }
+});
 
-function translateWeather(description) {
-  const translations = {
-    "clear sky": "Solrig",
-    "few clouds": "Mest Solrigt",
-    "scattered clouds": "Delvis skyet",
-    "broken clouds": "Skyet",
-    "shower rain": "Byger",
-    rain: "Regn",
-    thunderstorm: "Tordenvejr",
-    snow: "Sne",
-    mist: "Tåge",
+const weatherIcons = {
+  Solrig: "img/icons/solrig.svg",
+  "Mest Solrigt": "img/icons/lidtSkyet.svg",
+  "Delvis skyet": "img/icons/lidtSkyet.svg",
+  Skyet: "img/icons/skyet.svg",
+  Byger: "img/icons/lidtRegn.svg",
+  Regn: "img/icons/megetRegn.svg",
+  Tordenvejr: "img/icons/tordenvejr.svg",
+  Sne: "img/icons/sne.svg",
+  Tåge: "img/icons/foggy.svg",
+  "Let regn": "img/icons/lidtRegn.svg",
+  "Moderat regn": "img/icons/megetRegn.svg",
+  "Kraftig regn": "img/icons/megetRegn.svg",
+  Skybrud: "img/icons/megetRegn.svg",
+  Hagl: "img/icons/sne.svg",
+  "Tæt tåge": "img/icons/foggy.svg",
+  Overskyet: "img/icons/skyet.svg",
+  Røg: "img/icons/foggy.svg",
+  Vind: "img/icons/vind.svg",
+};
 
-    // Thunderstorm group (2xx)
-    "thunderstorm with light rain": "Tordenvejr med let regn",
-    "thunderstorm with rain": "Tordenvejr med regn",
-    "thunderstorm with heavy rain": "Tordenvejr med kraftig regn",
-    "light thunderstorm": "Let tordenvejr",
-    thunderstorm: "Tordenvejr",
-    "heavy thunderstorm": "Kraftigt tordenvejr",
-    "ragged thunderstorm": "Ujævnt tordenvejr",
-    "thunderstorm with light drizzle": "Tordenvejr med let støvregn",
-    "thunderstorm with drizzle": "Tordenvejr med støvregn",
-    "thunderstorm with heavy drizzle": "Tordenvejr med kraftig støvregn",
+async function fetchCountryData() {
+  const response = await fetch("../jsonData/countries.json"); // Juster stien
+  const countryData = await response.json();
+  return countryData;
+}
 
-    // Drizzle group (3xx)
-    "light intensity drizzle": "Let støvregn",
-    drizzle: "Støvregn",
-    "heavy intensity drizzle": "Kraftig støvregn",
-    "light intensity drizzle rain": "Let støvregn og regn",
-    "drizzle rain": "Støvregn og regn",
-    "heavy intensity drizzle rain": "Kraftig støvregn og regn",
-    "shower rain and drizzle": "Bygeregn og støvregn",
-    "heavy shower rain and drizzle": "Kraftig bygeregn og støvregn",
-    "shower drizzle": "Byger og støvregn",
-
-    // Rain group (5xx)
-    "light rain": "Let regn",
-    "moderate rain": "Moderat regn",
-    "heavy intensity rain": "Kraftig regn",
-    "very heavy rain": "Meget kraftig regn",
-    "extreme rain": "Skybrud",
-    "freezing rain": "Hagl",
-    "light intensity shower rain": "Let bygeregn",
-    "shower rain": "Bygeregn",
-    "heavy intensity shower rain": "Kraftig bygeregn",
-    "ragged shower rain": "Ujævnt bygeregn",
-
-    // Snow group (6xx)
-    "light snow": "Let sne",
-    snow: "Sne",
-    "heavy snow": "Kraftig sne",
-    sleet: "Slud",
-    "light shower sleet": "Let bygeslud",
-    "shower sleet": "Bygeslud",
-    "light rain and snow": "Let regn og sne",
-    "rain and snow": "Regn og sne",
-    "light shower snow": "Let bygesne",
-    "shower snow": "Bygesne",
-    "heavy shower snow": "Kraftig bygesne",
-
-    // Atmosphere group (7xx)
-    mist: "Tåge",
-    smoke: "Røg",
-    haze: "Dis",
-    "sand/dust whirls": "Sand-/støvhvirvler",
-    fog: "Tæt tåge",
-    sand: "Sand",
-    dust: "Støv",
-    "volcanic ash": "Vulkansk aske",
-    squalls: "Kastevinde",
-    tornado: "Tornado",
-
-    // Clear and Clouds group (800-80x)
-    "clear sky": "Solrig",
-    "few clouds": "Mest solrigt",
-    "scattered clouds": "Delvis skyet",
-    "broken clouds": "Skyet",
-    "overcast clouds": "Overskyet",
-  };
-
-  return translations[description] || description; // Returner originalen, hvis der ikke findes en oversættelse
+async function fetchWeatherDescriptions() {
+  const response = await fetch("../jsonData/weathers.json"); // Juster stien
+  const weatherData = await response.json();
+  return weatherData;
 }
 
 async function fetchWeather() {
@@ -88,25 +43,93 @@ async function fetchWeather() {
   const apiUrl = `http://localhost:3000/weather?city=${city}`;
 
   try {
-    const response = await fetch(apiUrl);
-    const data = await response.json();
+    const [weatherResponse, countryData, weatherDescriptions] =
+      await Promise.all([
+        fetch(apiUrl),
+        fetchCountryData(),
+        fetchWeatherDescriptions(),
+      ]);
 
-    if (response.ok) {
-      const translatedDescription = translateWeather(
-        data.weather[0].description
-      );
-      document.getElementById(
-        "weatherResult"
-      ).innerText = `Vejr i ${city}, : ${translatedDescription}, Temperaturen er: ${parseFloat(
-        data.main.temp
-      ).toFixed(0)}°C`;
-    } else {
-      document.getElementById("weatherResult").innerText =
-        "Error fetching weather data";
+    const weatherData = await weatherResponse.json();
+
+    if (weatherResponse.ok) {
+      // Hent vejrbeskrivelse og oversæt den ved at slå op i weathers.json
+      const weatherDescription = weatherData.weather[0].description;
+      const translatedDescription =
+        weatherDescriptions[weatherDescription] || weatherDescription;
+
+      // Skift ikonet baseret på den oversatte vejrbeskrivelse
+      const iconPath =
+        weatherIcons[translatedDescription] || "img/icons/default.svg";
+      document.getElementById("weatherIcon").src = iconPath;
+
+      // Skift baggrunds-video baseret på den oversatte vejrbeskrivelse
+      let videoPath;
+      switch (translatedDescription) {
+        case "Solrig":
+          videoPath = "./vid/sunny.mp4";
+          break;
+        case "Delvis skyet":
+        case "Mest Solrigt":
+          videoPath = "./vid/cloudy.mp4";
+          break;
+        case "Overskyet":
+        case "Skyet":
+          videoPath = "./vid/clouds.mp4";
+          break;
+        case "Byger":
+        case "Let regn":
+        case "Moderat regn":
+        case "Kraftig regn":
+        case "Skybrud":
+          videoPath = "./vid/rain.mp4";
+          break;
+        case "Tordenvejr":
+          videoPath = "./vid/thunder.mp4";
+          break;
+        case "Sne":
+        case "Hagl":
+          videoPath = "./vid/snow.mp4";
+          break;
+        case "Tåge":
+        case "Røg":
+        case "Tæt tåge":
+          videoPath = "./vid/rain.mp4"; // Hvis der er tåge, viser den rain.mp4
+          break;
+        default:
+          videoPath = "./vid/sunny.mp4"; // Tilfældig default video, hvis ingen match
+          break;
+      }
+
+      // Opdater videoelementet
+      document.getElementById("videoBg").src = videoPath;
+      document.getElementById("videoBg").parentElement.load(); // Genindlæser videoen
+
+      // Hent landekoden og slå op i countries.json
+      const countryCode = weatherData.sys.country;
+      const countryName = countryData[countryCode] || "Land ikke fundet";
+
+      // Display vejr og landdata
+      document.getElementById("degrees").innerText = `${parseFloat(
+        weatherData.main.temp
+      ).toFixed(0)}°`;
+      document.getElementById("city").innerText = city;
+      document.getElementById("country").innerText = countryName;
+      document.getElementById("feelsLike").innerText = `Føles som ${parseFloat(
+        weatherData.main.feels_like
+      ).toFixed(0)}°`;
+      document.getElementById("humidity").innerText = `${
+        weatherData.rain ? weatherData.rain["1h"] : 0
+      } mm `;
+      document.getElementById("howWindy").innerText = `${parseFloat(
+        weatherData.wind.speed
+      ).toFixed(0)} m/s`;
+      document.getElementById("weatherDescription").innerText =
+        translatedDescription;
     }
   } catch (error) {
     console.error("Fetch error:", error);
     document.getElementById("weatherResult").innerText =
-      "Failed to fetch weather data";
+      "Fejl: Kunne ikke hente vejrdata";
   }
 }

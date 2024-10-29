@@ -4,13 +4,113 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Weather App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
-    <h1>Weather App</h1>
-    <input type="text" id="cityInput" placeholder="Enter city name" />
-    <button id="getWeather">Get Weather</button>
-    <div id="weatherResult"></div>
+    <video autoplay muted id="sunnyVideo">
+      <source src="./vid/sunny.mp4" type="video/mp4" id="videoBg" />
+    </video>
+    <div
+      class="search-container flex justify-end items-center relative mt-5 mr-5"
+    >
+      <input
+        type="text"
+        id="cityInput"
+        placeholder="Søg efter by her"
+        class="py-2 rounded-full px-5 pr-10 opacity-95 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+      />
+      <button
+        id="getWeather"
+        class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500"
+      >
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </button>
+    </div>
+    <div id="weatherResult">
+      <div
+        class="weather-container w-full mt-16 px-5 flex justify-start items-center bg-white bg-opacity-50 pt-5 flex-col"
+      >
+        <div class="weather-info w-full">
+          <h1 class="text-3xl roboto-medium drop-shadow-lg" id="city">
+            Copenhagen
+          </h1>
+          <h3 class="roboto-medium drop-shadow-lg" id="country">Danmark</h3>
+          <div class="weather flex justify-between mt-4">
+            <div class="flex-col">
+              <div class="iconDegrees flex items-start">
+                <img
+                  src="img/icons/solrig.svg"
+                  alt="Sunny"
+                  class="w-24 mr-2"
+                  id="weatherIcon"
+                />
+                <h2
+                  id="degrees"
+                  class="text-6xl font-normal roboto-thin drop-shadow-lg"
+                >
+                  20°
+                </h2>
+              </div>
+              <p
+                id="weatherDescription"
+                class="text-lg roboto-regular drop-shadow-lg mt-4"
+              ></p>
+            </div>
+
+            <div class="details grid grid-cols-1 gap-3">
+              <div class="flex items-center">
+                <img
+                  src="img/icons/temp.svg"
+                  alt="Feels like"
+                  class="w-2 opacity-80 mx-3"
+                />
+                <p id="feelsLike" class="text-sm roboto-medium drop-shadow-lg">
+                  Føles som 20°
+                </p>
+              </div>
+              <div class="flex items-center">
+                <img
+                  src="img/icons/humidity.svg"
+                  alt="Humidity"
+                  class="w-5 opacity-80 mx-1.5"
+                />
+                <p id="humidity" class="text-sm roboto-medium drop-shadow-lg">
+                  0 mm
+                </p>
+              </div>
+              <div class="flex items-center">
+                <img
+                  src="img/icons/howWindy.svg"
+                  alt="Wind"
+                  class="w-5 opacity-80 mx-1.5"
+                />
+                <p id="howWindy" class="text-sm roboto-medium drop-shadow-lg">
+                  4 (6) m/s
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="expand mt-4">
+          <button id="expandToday" class="roboto-thin drop-shadow-lg">
+            <i class="fa-solid fa-chevron-down text-xl"></i>
+          </button>
+        </div>
+      </div>
+    </div>
 
     <script src="./js/script.js"></script>
+    <script
+      src="https://kit.fontawesome.com/e57fd20ed9.js"
+      crossorigin="anonymous"
+    ></script>
   </body>
 </html>
