@@ -1,5 +1,6 @@
 {
   "clear sky": "Solrig",
+  "sky is clear": "Solrig",
   "few clouds": "Mest Solrigt",
   "scattered clouds": "Delvis skyet",
   "broken clouds": "Skyet",
@@ -35,7 +36,7 @@
   "light intensity shower rain": "Let bygeregn",
   "heavy intensity shower rain": "Kraftig bygeregn",
   "ragged shower rain": "Ujævnt bygeregn",
-  "light snow": "Let sne",
+  "light snow": "Sne",
   "heavy snow": "Kraftig sne",
   "sleet": "Slud",
   "light shower sleet": "Let bygeslud",

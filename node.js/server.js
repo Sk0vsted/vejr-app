@@ -1,6 +1,3 @@
-// OBS - server skal køre for at kunne hente vejrdata fra OpenWeatherMap API
-// Kør serveren ved at køre "node server.js" i terminalen
-
 const https = require("https");
 const http = require("http");
 const dotenv = require("dotenv");
@@ -11,15 +8,14 @@ dotenv.config();
 const API_KEY = process.env.OPENWEATHERMAP_API_KEY;
 
 const server = http.createServer((req, res) => {
-  // Accepter CORS forespørgsler
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // Håndter forskellige endpoints
   if (req.url === "/") {
     res.writeHead(200, { "Content-Type": "text/html" });
     fs.createReadStream(path.join(__dirname, "../index.html")).pipe(res);
+
   } else if (req.url.startsWith("/weather")) {
     const urlParams = new URL(req.url, `http://${req.headers.host}`);
     const cityName = urlParams.searchParams.get("city");
@@ -30,9 +26,8 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    const apiUrl = `https://pro.openweathermap.org/data/2.5/weather?q=${cityName}&APPID=${API_KEY}&units=metric`;
+    const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&APPID=${API_KEY}&units=metric`;
 
-    // Hent vejrdata fra OpenWeatherMap API
     https
       .get(apiUrl, (response) => {
         let data = "";
@@ -50,8 +45,39 @@ const server = http.createServer((req, res) => {
         res.writeHead(500, { "Content-Type": "text/plain" });
         res.end("Error fetching weather data");
       });
+
+  // Brug standard API til ugentlige data
+  } else if (req.url.startsWith("/weeklyWeather")) {
+    const urlParams = new URL(req.url, `http://${req.headers.host}`);
+    const cityName = urlParams.searchParams.get("city");
+
+    if (!cityName) {
+      res.writeHead(400, { "Content-Type": "text/plain" });
+      res.end("City name is required");
+      return;
+    }
+
+    const weeklyApiUrl = `https://api.openweathermap.org/data/2.5/forecast/daily?q=${cityName}&cnt=7&units=metric&appid=${API_KEY}`;
+
+    https
+      .get(weeklyApiUrl, (weeklyResponse) => {
+        let weeklyData = "";
+        weeklyResponse.on("data", (chunk) => {
+          weeklyData += chunk;
+        });
+        weeklyResponse.on("end", () => {
+          const weeklyWeatherData = JSON.parse(weeklyData);
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify(weeklyWeatherData));
+        });
+      })
+      .on("error", (error) => {
+        console.error(error);
+        res.writeHead(500, { "Content-Type": "text/plain" });
+        res.end("Error fetching weekly weather data");
+      });
+
   } else if (req.url === "/script.js") {
-    // Send script.js filen til klienten
     res.writeHead(200, { "Content-Type": "application/javascript" });
     fs.createReadStream(path.join(__dirname, "script.js")).pipe(res);
   } else {

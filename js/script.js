@@ -1,4 +1,4 @@
-document.getElementById("getWeather").addEventListener("click", fetchWeather);
+document.getElementById("getWeather").addEventListener("click", () => fetchWeather());
 document.getElementById("cityInput").addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
     fetchWeather();
@@ -27,19 +27,31 @@ const weatherIcons = {
 };
 
 async function fetchCountryData() {
-  const response = await fetch("../jsonData/countries.json"); // Juster stien
+  const response = await fetch("../jsonData/countries.json");
   const countryData = await response.json();
   return countryData;
 }
 
 async function fetchWeatherDescriptions() {
-  const response = await fetch("../jsonData/weathers.json"); // Juster stien
+  const response = await fetch("../jsonData/weathers.json");
   const weatherData = await response.json();
   return weatherData;
 }
 
-async function fetchWeather() {
-  let city = document.getElementById("cityInput").value;
+async function fetchWeather(defaultCity) {
+  let city;
+  
+  if (defaultCity) {
+    city = defaultCity;
+  } else {
+    city = document.getElementById("cityInput").value;
+  }
+  
+  if (!city) {
+    console.error("Ingen by angivet");
+    return;
+  }
+
   const apiUrl = `http://localhost:3000/weather?city=${city}`;
 
   try {
@@ -53,17 +65,17 @@ async function fetchWeather() {
     const weatherData = await weatherResponse.json();
 
     if (weatherResponse.ok) {
-      // Hent vejrbeskrivelse og oversæt den ved at slå op i weathers.json
+      // Vis weatherResult div'en
+      document.getElementById("weatherResult").classList.remove("hidden");
+      
       const weatherDescription = weatherData.weather[0].description;
       const translatedDescription =
         weatherDescriptions[weatherDescription] || weatherDescription;
 
-      // Skift ikonet baseret på den oversatte vejrbeskrivelse
       const iconPath =
-        weatherIcons[translatedDescription] || "img/icons/default.svg";
+        weatherIcons[translatedDescription] || "img/icons/solrig.svg";
       document.getElementById("weatherIcon").src = iconPath;
 
-      // Skift baggrunds-video baseret på den oversatte vejrbeskrivelse
       let videoPath;
       switch (translatedDescription) {
         case "Solrig":
@@ -94,42 +106,57 @@ async function fetchWeather() {
         case "Tåge":
         case "Røg":
         case "Tæt tåge":
-          videoPath = "./vid/rain.mp4"; // Hvis der er tåge, viser den rain.mp4
+          videoPath = "./vid/rain.mp4";
           break;
         default:
-          videoPath = "./vid/sunny.mp4"; // Tilfældig default video, hvis ingen match
+          videoPath = "./vid/sunny.mp4";
           break;
       }
 
-      // Opdater videoelementet
       document.getElementById("videoBg").src = videoPath;
-      document.getElementById("videoBg").parentElement.load(); // Genindlæser videoen
+      document.getElementById("videoBg").parentElement.load();
 
-      // Hent landekoden og slå op i countries.json
       const countryCode = weatherData.sys.country;
       const countryName = countryData[countryCode] || "Land ikke fundet";
 
-      // Display vejr og landdata
-      document.getElementById("degrees").innerText = `${parseFloat(
-        weatherData.main.temp
-      ).toFixed(0)}°`;
-      document.getElementById("city").innerText = city;
-      document.getElementById("country").innerText = countryName;
-      document.getElementById("feelsLike").innerText = `Føles som ${parseFloat(
-        weatherData.main.feels_like
-      ).toFixed(0)}°`;
-      document.getElementById("humidity").innerText = `${
-        weatherData.rain ? weatherData.rain["1h"] : 0
-      } mm `;
-      document.getElementById("howWindy").innerText = `${parseFloat(
-        weatherData.wind.speed
-      ).toFixed(0)} m/s`;
-      document.getElementById("weatherDescription").innerText =
-        translatedDescription;
+      // Opdater weather data med 500ms delay
+      setTimeout(() => {
+        document.getElementById("degrees").innerText = `${parseFloat(
+          weatherData.main.temp
+        ).toFixed(0)}°`;
+        document.getElementById("city").innerText = city;
+        document.getElementById("country").innerText = countryName;
+        document.getElementById("feelsLike").innerText = `Føles som ${parseFloat(
+          weatherData.main.feels_like
+        ).toFixed(0)}°`;
+        document.getElementById("humidity").innerText = `${
+          weatherData.rain ? weatherData.rain["1h"] : 0
+        } mm `;
+        document.getElementById("howWindy").innerText = `${parseFloat(
+          weatherData.wind.speed
+        ).toFixed(0)} m/s`;
+        document.getElementById("weatherDescription").innerText =
+          translatedDescription;
+      }, 500);
+
+      // Hent og vis ugentlig vejrudsigt med 500ms delay
+      setTimeout(() => {
+        fetchWeeklyWeather(city, weatherDescriptions);
+        document.getElementById("nextDaysWeather").style.display = "block";
+        document.getElementById("weatherResult").style.display = "block";
+      }, 500);
     }
   } catch (error) {
     console.error("Fetch error:", error);
-    document.getElementById("weatherResult").innerText =
-      "Fejl: Kunne ikke hente vejrdata";
+    setTimeout(() => {
+      document.getElementById("weatherResult").innerText =
+        "Fejl: Kunne ikke hente vejrdata";
+    }, 500);
   }
 }
+
+// Start med at vise Aarhus vejret når siden indlæses
+window.onload = async () => {
+  // Hent vejr for Aarhus
+  await fetchWeather("Aarhus");
+};
