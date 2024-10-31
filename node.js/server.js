@@ -63,8 +63,7 @@ const server = http.createServer((req, res) => {
   // Vi bruger mere eller mindre det samme princip som før. Dog ændres API URL og parametren i vores HTTPS GET request til weeklyResponse istedet.
   // Endpoint til ugentlig vejrudsigt
   } else if (req.url.startsWith('/weeklyWeather')) {
-    const urlParams = new URL(req.url, `http://${req.headers.host}`);
-    const cityName = urlParams.searchParams.get('city');
+    const cityName = req.url.split('city=')[1]?.split('&')[0];
 
     if (!cityName) {
       res.writeHead(400, { 'Content-Type': 'text/plain' });

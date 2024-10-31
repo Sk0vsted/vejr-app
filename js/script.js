@@ -62,7 +62,6 @@ async function fetchWeather(defaultCity) {
       fetchCountryData(),  // Henter landeinformation
       fetchWeatherDescriptions(),  // Henter vejrbetingelsesbeskrivelser
     ]);
-
     const weatherData = await weatherResponse.json();  // Konverterer vejrdata til JSON-format
 
     if (weatherResponse.ok) {  // Hvis vejrdata er korrekt modtaget, opdateres visningen med resultaterne
@@ -101,21 +100,17 @@ async function fetchWeather(defaultCity) {
       const countryName = countryData[countryCode] || 'Land ikke fundet';  // Finder landet ud fra landekode
 
       // Opdaterer vejr-elementer på siden med en kort forsinkelse for en glidende overgang
-      setTimeout(() => {
         document.getElementById('degrees').innerText = `${parseFloat(weatherData.main.temp).toFixed(0)}°`;
         document.getElementById('city').innerText = city;
         document.getElementById('country').innerText = countryName;
         document.getElementById('feelsLike').innerText = `Føles som ${parseFloat(weatherData.main.feels_like).toFixed(0)}°`;
         document.getElementById('humidity').innerText = `${weatherData.rain ? weatherData.rain['1h'] : 0} mm `;
         document.getElementById('howWindy').innerText = `${parseFloat(weatherData.wind.speed).toFixed(0)} m/s`;
-        document.getElementById('weatherDescription').innerText = translatedDescription;
-      }, 500);  // Forsinkelse på 500ms for bedre brugeroplevelse
+        document.getElementById('weatherDescription').innerText = translatedDescription;// Forsinkelse på 500ms for bedre brugeroplevelse
 
-      // Viser ugentlig vejrudsigt med samme forsinkelse på 500ms
-      setTimeout(() => {
+        // Henter og viser ugens vejrudsigt
         fetchWeeklyWeather(city, weatherDescriptions);
         document.getElementById('nextDaysWeather').style.display = 'block';
-      }, 500);
     }
   } catch (error) {  // Håndterer fejl i datahentningen
     console.error('Fetch error:', error);  // Logger fejlen i konsollen
@@ -146,20 +141,20 @@ async function fetchWeeklyWeather(city, weatherDescriptions) {
     if (response.ok) {
       const today = new Date();  // Dagens dato bruges til at finde de næste dages navne
 
-      // Gennemgår hver dag i API-data og opdaterer HTML-elementer for dagene
-      weeklyData.list.forEach((dailyData, i) => {
-
-        // Beregner indekset for ugedagen (0-6), så det passer med `daysOfWeek`
-        const dayIndex = (today.getDay() + i) % 7;
-        const dayName = daysOfWeek[dayIndex];  // Henter det danske navn på dagen
-
-        // Henter temperatur, vindhastighed og mængden af regn for dagen
-        const tempDay = dailyData.temp.day;
-        const windSpeed = dailyData.speed;
-        const rain = dailyData.rain || 0;
-
-        // Henter og oversætter vejrbetingelse for dagen
-        const apiDescription = dailyData.weather[0].description;
+        // Itererer gennem hver dag i vejrdataene fra API’et og opdaterer HTML-elementerne
+        weeklyData.list.forEach((dailyData, i) => {
+  
+        // `i` repræsenterer dagens indeks i ugen (0-6). Vi bruger `today.getDay()` som start.
+        const dayIndex = (today.getDay() + i) % 7;  // Finder ugedagen som et indeks mellem 0-6
+        const dayName = daysOfWeek[dayIndex];       // Henter navnet på ugedagen (fx "Mandag")
+  
+        // `dailyData` indeholder vejrdata for én dag. Vi henter relevante værdier:
+        const tempDay = dailyData.temp.day;          // Dagens temperatur
+        const windSpeed = dailyData.speed;           // Dagens vindhastighed
+        const rain = dailyData.rain || 0;            // Nedbørsmængden, default 0 hvis ingen regn
+  
+        // Vejrbeskrivelsen hentes og oversættes om muligt
+        const apiDescription = dailyData.weather[0].description; // Beskrivelse fra API
         const translatedDescription = weatherDescriptions[apiDescription] || apiDescription;
 
         // Vælger ikon til vejret for dagen
@@ -168,8 +163,8 @@ async function fetchWeeklyWeather(city, weatherDescriptions) {
         // Opdaterer HTML-elementer for dagene i vejrudsigten
         document.getElementById(`day${i + 1}Name`).innerText = dayName;
         document.getElementById(`day${i + 1}Degrees`).innerText = `${tempDay.toFixed(0)}°`;
-        document.getElementById(`day${i + 1}Wind`).innerText = `${windSpeed.toFixed(1)} m/s`;
-        document.getElementById(`day${i + 1}Rain`).innerText = `${rain.toFixed(1)} mm`;
+        document.getElementById(`day${i + 1}Wind`).innerText = `${windSpeed.toFixed(0)} m/s`;
+        document.getElementById(`day${i + 1}Rain`).innerText = `${rain.toFixed(0)} mm`;
 
         // Tilføjer ikon og alt tekst baseret på oversat beskrivelse
         document.getElementById(`day${i + 1}Icon`).src = iconPath;
